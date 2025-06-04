@@ -28,7 +28,7 @@ https://github.com/user-attachments/assets/f93ab13f-6671-436b-8eda-01e425268c49
 
 ## ⚡️ How to Create the DLL to Inject into Games ⬇️ 
 
-1. [Download Hydra](https://github.com/DestroyerDarkNess/Hydra/releases/download/1.1.5/HailHydra.7z) 
+1. [Download Hydra v1.1.8](https://github.com/DestroyerDarkNess/Hydra/releases/download/1.1.8/HailHydra.7z) 
 2. Follow the steps below ⬇️:
 
 https://github.com/user-attachments/assets/4e7df1a1-217f-4ff6-8979-6b2f86d49280
