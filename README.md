@@ -2,6 +2,21 @@
 Universal Internal Imgui Implementation, uses Hexa.NET.ImGui and RenderSpy 
 <br><br>
 
+## ⚙️ Features & Options
+
+Listed below are all the features of Hydra:
+ 
+| Backend| Description                                              | Status   |  
+| ------ | -------------------------------------------------------- | ---------------- |  
+| DX9   |   Present Hook for DirectX 9          | ✅ |  
+🚧 Under Construction. 🚧
+| DX 10  |   - DirectX 10          | ✖️ |  
+| DX 11  |  - DirectX 11          | ✖️ |  
+| DX 12 |   - DirectX 12          | ✖️ |  
+| OpenGL  |   - OpenGL         | ✖️ |   
+
+
+
 ## ⚡️ Quick start
 
 First, ensure you have **[.NET Framework 4.8](https://go.microsoft.com/fwlink/?linkid=2088631)** or higher installed.
