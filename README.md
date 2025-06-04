@@ -2,9 +2,9 @@
 Universal Internal Imgui Implementation, uses Hexa.NET.ImGui and RenderSpy 
 <br><br>
 
-## ⚙️ Features & Options
+## ⚙️ Current ImGui Implementation
 
-Listed below are all the features of Hydra:
+The current hooks and the ImGui implementation status are listed below:
  
 | Backend| Description                                              | Status   |  
 | ------ | -------------------------------------------------------- | ---------------- |  
