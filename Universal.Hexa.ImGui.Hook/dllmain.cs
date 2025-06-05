@@ -147,7 +147,7 @@ namespace Universal.DearImGui.Hook
                 return;
             }
 
-            RenderSpy.Graphics.GraphicsType GraphicsT = RenderSpy.Graphics.Detector.GetCurrentGraphicsType();
+            RenderSpy.Graphics.GraphicsType GraphicsT = RenderSpy.Graphics.GraphicsType.opengl; // RenderSpy.Graphics.Detector.GetCurrentGraphicsType();
 
             RenderSpy.Interfaces.IHook CurrentHook = null;
 
@@ -224,6 +224,25 @@ namespace Universal.DearImGui.Hook
 
                     glSwapBuffersHook.wglSwapBuffersEvent += (IntPtr hdc) =>
                     {
+                        try
+                        {
+                            if (ImGuiBackend == null)
+                            {
+                                ImGuiBackend = new OpenGLBackend();
+                                ImGuiBackend.OnImGuiCreateContext += HandleImGuiCreateContext;
+                                ImGuiBackend.OnImGuiRender += HandleImGuiRender;
+
+                                ImGuiBackend.Initialize(hdc, dllmain.GameHandle);
+                            }
+
+                            ImGuiBackend.NewFrame();
+                            ImGuiBackend.Render();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Error in OpenGL Present Event: {ex.Message} {Environment.NewLine} {Environment.NewLine} {ex.StackTrace}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+
                         return glSwapBuffersHook.wglSwapBuffers_orig(hdc); ;
                     };
 
@@ -364,7 +383,7 @@ namespace Universal.DearImGui.Hook
                 if (InputImguiEmu != null) InputImguiEmu.UpdateMouseState();
                 ImGui.ShowDemoWindow();
                 ImGui.Begin("Universal Demo", ref Show);
-                ImGui.Text("Hello from D3D9");
+                ImGui.Text("Hello from C#");
                 ImGui.End();
             }
         }

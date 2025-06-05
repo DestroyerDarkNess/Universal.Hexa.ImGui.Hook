@@ -106,6 +106,7 @@ namespace Universal.DearImGui.Hook.Backends
                     handle = IntPtr.Zero;
                 }
             }
+
             FreeIfLoaded(ref _implHandle);
             FreeIfLoaded(ref _cimguiHandle);
 
