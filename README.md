@@ -10,11 +10,12 @@ The current hooks and the ImGui implementation status are listed below:
 | Backend| Description                                              | Status   |  
 | ------ | -------------------------------------------------------- | ---------------- |  
 | DX9   |   Present Hook for DirectX 9          | ✅ |  
+| OpenGL  | wglSwapBuffers Hook for OpenGL         | ✅ |   
 🚧 Under Construction. 🚧
 | DX 10  |   - DirectX 10          | ✖️ |  
 | DX 11  |  - DirectX 11          | ✖️ |  
 | DX 12 |   - DirectX 12          | ✖️ |  
-| OpenGL  |   - OpenGL         | ✖️ |   
+
 
 
 
