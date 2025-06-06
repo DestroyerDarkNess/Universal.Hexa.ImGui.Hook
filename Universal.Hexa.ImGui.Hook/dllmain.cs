@@ -1,5 +1,6 @@
 ﻿using Hexa.NET.ImGui;
 using RenderSpy.Globals;
+using RenderSpy.Inputs;
 using SharpDX.Direct3D9;
 using System;
 using System.Collections.Generic;
@@ -31,7 +32,6 @@ namespace Universal.DearImGui.Hook
 
         public static void Main(string[] args)
         {
-            Runtime = false;
             Show = true;
 
             bool result = Diagnostic.RunDiagnostic();
@@ -109,6 +109,20 @@ namespace Universal.DearImGui.Hook
                         }
                         return EndSceneHook_9.EndScene_orig(device);
                     };
+
+                    RenderSpy.Graphics.d3d9.Reset ResetHook_9 = new RenderSpy.Graphics.d3d9.Reset();
+                    ResetHook_9.Install();
+
+                    ResetHook_9.Reset_Event += (IntPtr device, ref SharpDX.Direct3D9.PresentParameters presentParameters) =>
+                    {
+                        if (ImGuiBackend != null) ImGuiBackend.OnLostDevice();
+
+                        int Reset = ResetHook_9.Reset_orig(device, ref presentParameters);
+
+                        if (ImGuiBackend != null) ImGuiBackend.OnResetDevice();
+
+                        return Reset;
+                    };
                 };
 
                 try { Application.Run(OverlayWindow); } catch (Exception Ex) { System.Windows.Forms.MessageBox.Show(Ex.Message); Environment.Exit(0); }
@@ -147,11 +161,11 @@ namespace Universal.DearImGui.Hook
                 return;
             }
 
-            RenderSpy.Graphics.GraphicsType GraphicsT = RenderSpy.Graphics.GraphicsType.opengl; // RenderSpy.Graphics.Detector.GetCurrentGraphicsType();
+            RenderSpy.Graphics.GraphicsType GraphicsT = RenderSpy.Graphics.GraphicsType.d3d9; // RenderSpy.Graphics.Detector.GetCurrentGraphicsType();
 
-            RenderSpy.Interfaces.IHook CurrentHook = null;
+            List<RenderSpy.Interfaces.IHook> CurrentHooks = new List<RenderSpy.Interfaces.IHook>();
 
-            LogConsole("Current Graphics: " + GraphicsT.ToString() + " LIB: " + RenderSpy.Graphics.Detector.GetLibByEnum(GraphicsT));
+            Console.WriteLine("Current Graphics: " + GraphicsT.ToString() + " LIB: " + RenderSpy.Graphics.Detector.GetLibByEnum(GraphicsT));
 
             switch (GraphicsT)
             {
@@ -159,7 +173,7 @@ namespace Universal.DearImGui.Hook
 
                     RenderSpy.Graphics.d3d9.Present PresentHook_9 = new RenderSpy.Graphics.d3d9.Present();
                     PresentHook_9.Install();
-                    CurrentHook = PresentHook_9;
+                    CurrentHooks.Add(PresentHook_9);
                     PresentHook_9.PresentEvent += (IntPtr device, IntPtr sourceRect, IntPtr destRect, IntPtr hDestWindowOverride, IntPtr dirtyRegion) =>
                     {
                         try
@@ -184,14 +198,27 @@ namespace Universal.DearImGui.Hook
                         return PresentHook_9.Present_orig(device, sourceRect, destRect, hDestWindowOverride, dirtyRegion);
                     };
 
+                    RenderSpy.Graphics.d3d9.Reset ResetHook_9 = new RenderSpy.Graphics.d3d9.Reset();
+                    ResetHook_9.Install();
+                    CurrentHooks.Add(ResetHook_9);
+                    ResetHook_9.Reset_Event += (IntPtr device, ref SharpDX.Direct3D9.PresentParameters presentParameters) =>
+                    {
+                        if (ImGuiBackend != null) ImGuiBackend.OnLostDevice();
+
+                        int Reset = ResetHook_9.Reset_orig(device, ref presentParameters);
+
+                        if (ImGuiBackend != null) ImGuiBackend.OnResetDevice();
+
+                        return Reset;
+                    };
+
                     break;
 
                 case RenderSpy.Graphics.GraphicsType.d3d10:
 
                     RenderSpy.Graphics.d3d10.Present PresentHook_10 = new RenderSpy.Graphics.d3d10.Present();
                     PresentHook_10.Install();
-                    CurrentHook = PresentHook_10;
-
+                    CurrentHooks.Add(PresentHook_10);
                     PresentHook_10.PresentEvent += (swapChainPtr, syncInterval, flags) =>
                     {
                         return PresentHook_10.Present_orig(swapChainPtr, syncInterval, flags);
@@ -203,8 +230,7 @@ namespace Universal.DearImGui.Hook
 
                     RenderSpy.Graphics.d3d11.Present PresentHook_11 = new RenderSpy.Graphics.d3d11.Present();
                     PresentHook_11.Install();
-                    CurrentHook = PresentHook_11;
-
+                    CurrentHooks.Add(PresentHook_11);
                     PresentHook_11.PresentEvent += (swapChainPtr, syncInterval, flags) =>
                     {
                         return PresentHook_11.Present_orig(swapChainPtr, syncInterval, flags);
@@ -220,8 +246,7 @@ namespace Universal.DearImGui.Hook
 
                     RenderSpy.Graphics.opengl.wglSwapBuffers glSwapBuffersHook = new RenderSpy.Graphics.opengl.wglSwapBuffers();
                     glSwapBuffersHook.Install();
-                    CurrentHook = glSwapBuffersHook;
-
+                    CurrentHooks.Add(glSwapBuffersHook);
                     glSwapBuffersHook.wglSwapBuffersEvent += (IntPtr hdc) =>
                     {
                         try
@@ -257,9 +282,39 @@ namespace Universal.DearImGui.Hook
                     break;
             }
 
+            DirectInputHook DirectInputHook_Hook = new DirectInputHook();
+
+            IntPtr already = RenderSpy.Globals.WinApi.GetModuleHandle("dinput8.dll");
+
+            if (already != IntPtr.Zero)
+            {
+                DirectInputHook_Hook.WindowHandle = GameHandle;
+                DirectInputHook_Hook.Install();
+                DirectInputHook_Hook.GetDeviceState += (IntPtr hDevice, int cbData, IntPtr lpvData) =>
+                {
+                    if (Show) return 0;
+                    return DirectInputHook_Hook.Hook_orig(hDevice, cbData, lpvData);
+                };
+            }
+
+            SetCursorPos NewHookCursor = new SetCursorPos();
+            NewHookCursor.Install();
+            NewHookCursor.SetCursorPos_Event += (int x, int y) =>
+            {
+                NewHookCursor.BlockInput = Show;
+                return false;
+            };
+
             while (Runtime) { }
 
-            CurrentHook.Uninstall();
+            if (already != IntPtr.Zero) DirectInputHook_Hook.Uninstall();
+            NewHookCursor.Uninstall();
+            foreach (var hook in CurrentHooks)
+            {
+                if (hook != null) hook.Uninstall();
+            }
+
+            if (ImGuiBackend != null) ImGuiBackend.Dispose();
         }
 
         public static void HandleImGuiCreateContext()
@@ -344,7 +399,6 @@ namespace Universal.DearImGui.Hook
             style.TabRounding = 4;
             //style.WindowRounding = 5.0f;
             //style.FrameRounding = 5.0f;
-            //style.FrameBorderSize = 1.0f;
 
             // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
             if ((ImGuiBackend.IO.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
@@ -370,7 +424,9 @@ namespace Universal.DearImGui.Hook
 
         public static void HandleImGuiRender()
         {
-            if (Runtime) ImGuiBackend.IO.MouseDrawCursor = Show;
+            if (!Runtime) return;
+
+            ImGuiBackend.IO.MouseDrawCursor = Show;
 
             if (InputImguiEmu != null)
             {
@@ -385,14 +441,6 @@ namespace Universal.DearImGui.Hook
                 ImGui.Begin("Universal Demo", ref Show);
                 ImGui.Text("Hello from C#");
                 ImGui.End();
-            }
-        }
-
-        public static void LogConsole(string message)
-        {
-            if (Logger)
-            {
-                Console.WriteLine(message);
             }
         }
     }

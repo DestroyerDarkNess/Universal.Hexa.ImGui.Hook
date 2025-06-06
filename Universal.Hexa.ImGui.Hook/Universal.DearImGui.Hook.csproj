@@ -34,8 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>
-    </StartupObject>
+    <StartupObject>Universal.DearImGui.Hook.dllmain</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Hexa.NET.ImGui, Version=1.91.9.0, Culture=neutral, processorArchitecture=MSIL">

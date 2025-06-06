@@ -14,7 +14,7 @@ namespace Universal.DearImGui.Hook.Core.Cimgui
             }
             catch (Exception ex)
             {
-                dllmain.LogConsole($"[CimguiRuntime] Error cargando cimgui.dll: {ex}");
+                Console.WriteLine($"[CimguiRuntime] Error cargando cimgui.dll: {ex}");
                 throw;
             }
         }, isThreadSafe: true);
